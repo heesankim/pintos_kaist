@@ -2,6 +2,8 @@
 #define VM_VM_H
 #include <stdbool.h>
 #include "threads/palloc.h"
+#include "lib/kernel/hash.h"
+
 
 enum vm_type {
 	/* page not initialized */
@@ -42,11 +44,16 @@ struct thread;
  * DO NOT REMOVE/MODIFY PREDEFINED MEMBER OF THIS STRUCTURE. */
 struct page {
 	const struct page_operations *operations;
+
+	// 키가 되는 가상 주소
 	void *va;              /* Address in terms of user space */
 	struct frame *frame;   /* Back reference for frame */
 
 	/* Your implementation */
-
+	
+	struct hash_elem hash_elem; // spt테이블에서 페이지를 찾기 위해서 hash_elem 필요함
+	// 이 hash_elem을 타고 struct page 로 가서 메타데이터를 알 수가 있다.
+	
 	/* Per-type data are binded into the union.
 	 * Each function automatically detects the current union */
 	union {
@@ -60,9 +67,10 @@ struct page {
 };
 
 /* The representation of "frame" */
+// 물리적 메모리를 나타냄
 struct frame {
-	void *kva;
-	struct page *page;
+	void *kva; // 커널 가상 주소
+	struct page *page; // 페이지 구조
 };
 
 /* The function table for page operations.
@@ -85,6 +93,7 @@ struct page_operations {
  * We don't want to force you to obey any specific design for this struct.
  * All designs up to you for this. */
 struct supplemental_page_table {
+	struct hash spt_hash; // hash 자료구조 방식의 spt임
 };
 
 #include "threads/thread.h"
